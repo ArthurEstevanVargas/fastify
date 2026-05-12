@@ -1,28 +1,27 @@
-import Fastify from 'fastify';
-import AutoLoad, { AutoloadPluginOptions } from '@fastify/autoload';
-import { join } from 'path';
+import Fastify, { type FastifyInstance } from 'fastify';
+import sensible from './plugins/sensible';
+import database from './plugins/database';
+import errorHandler from './plugins/error-handler';
+import { registerHealthRoute } from './modules/health.route';
+import { registerCategoryRoutes } from './modules/categories/category.route';
+import { registerAuthorRoutes } from './modules/authors/author.route';
+import { registerArticleRoutes } from './modules/articles/article.route';
+import { registerArticleSourceRoutes } from './modules/article-sources/article-source.route';
 
-const fastify = Fastify({
-  logger: true
-});
+export const buildApp = async (): Promise<FastifyInstance> => {
+  const fastify = Fastify({
+    logger: true
+  });
 
-const pluginOptions: Partial<AutoloadPluginOptions> = {
-  // Place your custom options the autoload plugin below here.
-}
+  await fastify.register(sensible);
+  await fastify.register(database);
+  await fastify.register(errorHandler);
 
-fastify.register(AutoLoad, {
-  dir: join(__dirname, 'plugins'),
-  options: pluginOptions
-});
+  await fastify.register(registerHealthRoute);
+  await fastify.register(registerCategoryRoutes, { prefix: '/api/v1/categories' });
+  await fastify.register(registerAuthorRoutes, { prefix: '/api/v1/authors' });
+  await fastify.register(registerArticleRoutes, { prefix: '/api/v1/articles' });
+  await fastify.register(registerArticleSourceRoutes, { prefix: '/api/v1/article-sources' });
 
-fastify.register(AutoLoad, {
-  dir: join(__dirname, 'routes'),
-  options: pluginOptions
-});
-
-fastify.listen({ host: '::', port: Number(process.env.PORT) || 3000 }, function (err, address) {
-  if (err) {
-    fastify.log.error(err)
-    process.exit(1)
-  }
-});
+  return fastify;
+};

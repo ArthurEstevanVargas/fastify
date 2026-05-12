@@ -1,3 +1,7 @@
+import { config } from 'dotenv';
+
+config();
+
 export type NodeEnv = 'development' | 'test' | 'production';
 
 export type Env = {

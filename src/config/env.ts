@@ -6,6 +6,7 @@ export type NodeEnv = 'development' | 'test' | 'production';
 
 export type Env = {
   adminApiKey: string | undefined;
+  corsOrigins: string[];
   databaseUrl: string | undefined;
   nodeEnv: NodeEnv;
   port: number;
@@ -29,6 +30,17 @@ const parsePort = (value: string | undefined): number => {
   return port;
 };
 
+const parseCorsOrigins = (value: string | undefined): string[] => {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+};
+
 export const loadEnv = (): Env => {
   const nodeEnv = isNodeEnv(process.env.NODE_ENV) ? process.env.NODE_ENV : 'development';
   const adminApiKey = process.env.ADMIN_API_KEY;
@@ -48,6 +60,7 @@ export const loadEnv = (): Env => {
 
   return {
     adminApiKey,
+    corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
     databaseUrl,
     nodeEnv,
     port: parsePort(process.env.PORT)

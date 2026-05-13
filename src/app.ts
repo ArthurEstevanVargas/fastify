@@ -1,4 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
+import cors from '@fastify/cors';
+import { loadEnv } from './config/env';
 import sensible from './plugins/sensible';
 import database from './plugins/database';
 import errorHandler from './plugins/error-handler';
@@ -9,6 +11,7 @@ import { registerArticleRoutes } from './modules/articles/article.route';
 import { registerArticleSourceRoutes } from './modules/article-sources/article-source.route';
 
 export const buildApp = async (): Promise<FastifyInstance> => {
+  const env = loadEnv();
   const fastify = Fastify({
     logger: {
       redact: [
@@ -26,6 +29,26 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         '*.connectionString'
       ]
     }
+  });
+
+  await fastify.register(cors, {
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (env.nodeEnv !== 'production' && env.corsOrigins.length === 0) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, env.corsOrigins.includes(origin));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+    credentials: true,
+    maxAge: 86400
   });
 
   await fastify.register(sensible);

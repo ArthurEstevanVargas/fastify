@@ -11,25 +11,73 @@ import { createCategory, deleteCategory, getCategory, listCategories, updateCate
 import { errorResponseSchema } from '../../shared/schemas/common.schemas';
 
 export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<void> => {
-  fastify.get('/', { schema: { response: { 200: categoryListResponseSchema } } }, listCategories);
+  fastify.get(
+    '/',
+    {
+      schema: {
+        tags: ['Categories'],
+        summary: 'Lista categorias',
+        description: 'Lista categorias ativas ordenadas por displayOrder e nome.',
+        response: { 200: categoryListResponseSchema }
+      }
+    },
+    listCategories
+  );
 
   fastify.get(
     '/:idOrSlug',
-    { schema: { params: categoryIdOrSlugParamsSchema, response: categoryRouteResponses } },
+    {
+      schema: {
+        tags: ['Categories'],
+        summary: 'Busca categoria',
+        description: 'Busca uma categoria ativa por id UUID ou slug.',
+        params: categoryIdOrSlugParamsSchema,
+        response: categoryRouteResponses
+      }
+    },
     getCategory
   );
 
-  fastify.post('/', { schema: { body: createCategoryBodySchema, response: categoryRouteResponses } }, createCategory);
+  fastify.post(
+    '/',
+    {
+      schema: {
+        tags: ['Categories'],
+        summary: 'Cria categoria',
+        description: 'Cria uma categoria editorial. Slugs devem ser unicos.',
+        body: createCategoryBodySchema,
+        response: categoryRouteResponses
+      }
+    },
+    createCategory
+  );
 
   fastify.patch(
     '/:id',
-    { schema: { params: categoryIdParamsSchema, body: updateCategoryBodySchema, response: categoryRouteResponses } },
+    {
+      schema: {
+        tags: ['Categories'],
+        summary: 'Atualiza categoria',
+        description: 'Atualiza parcialmente uma categoria existente.',
+        params: categoryIdParamsSchema,
+        body: updateCategoryBodySchema,
+        response: categoryRouteResponses
+      }
+    },
     updateCategory
   );
 
   fastify.delete(
     '/:id',
-    { schema: { params: categoryIdParamsSchema, response: { 204: { type: 'null' }, 404: errorResponseSchema, 409: errorResponseSchema } } },
+    {
+      schema: {
+        tags: ['Categories'],
+        summary: 'Remove categoria',
+        description: 'Remove logicamente uma categoria. Categorias com artigos ativos nao podem ser removidas.',
+        params: categoryIdParamsSchema,
+        response: { 204: { type: 'null' }, 404: errorResponseSchema, 409: errorResponseSchema }
+      }
+    },
     deleteCategory
   );
 };

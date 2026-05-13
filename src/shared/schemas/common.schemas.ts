@@ -1,4 +1,12 @@
 export const errorResponseSchema = {
+  description: 'Resposta padrao para erros tratados pela API.',
+  examples: [
+    {
+      error: true,
+      message: 'Dados invalidos',
+      code: 'VALIDATION_ERROR'
+    }
+  ],
   type: 'object',
   required: ['error', 'message', 'code'],
   additionalProperties: false,

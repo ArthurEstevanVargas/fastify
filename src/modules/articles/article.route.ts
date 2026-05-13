@@ -1,5 +1,6 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, RouteHandlerMethod } from 'fastify';
 import { errorResponseSchema } from '../../shared/schemas/common.schemas';
+import { requireAdminApiKey } from '../../plugins/admin-auth';
 import {
   createArticle,
   deleteArticle,
@@ -80,6 +81,7 @@ export const registerArticleRoutes = async (fastify: FastifyInstance): Promise<v
   fastify.post(
     '/',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Articles'],
         summary: 'Cria artigo',
@@ -88,12 +90,13 @@ export const registerArticleRoutes = async (fastify: FastifyInstance): Promise<v
         response: articleRouteResponses
       }
     },
-    createArticle
+    createArticle as RouteHandlerMethod
   );
 
   fastify.patch(
     '/:id',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Articles'],
         summary: 'Atualiza artigo',
@@ -103,12 +106,13 @@ export const registerArticleRoutes = async (fastify: FastifyInstance): Promise<v
         response: articleRouteResponses
       }
     },
-    updateArticle
+    updateArticle as RouteHandlerMethod
   );
 
   fastify.delete(
     '/:id',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Articles'],
         summary: 'Remove artigo',
@@ -117,6 +121,6 @@ export const registerArticleRoutes = async (fastify: FastifyInstance): Promise<v
         response: { 204: { type: 'null' }, 404: errorResponseSchema }
       }
     },
-    deleteArticle
+    deleteArticle as RouteHandlerMethod
   );
 };

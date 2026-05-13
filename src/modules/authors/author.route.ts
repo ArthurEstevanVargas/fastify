@@ -1,5 +1,6 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, RouteHandlerMethod } from 'fastify';
 import { errorResponseSchema } from '../../shared/schemas/common.schemas';
+import { requireAdminApiKey } from '../../plugins/admin-auth';
 import { createAuthor, deleteAuthor, getAuthor, listAuthors, updateAuthor } from './author.controller';
 import {
   authorIdParamsSchema,
@@ -40,6 +41,7 @@ export const registerAuthorRoutes = async (fastify: FastifyInstance): Promise<vo
   fastify.post(
     '/',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Authors'],
         summary: 'Cria autor',
@@ -48,12 +50,13 @@ export const registerAuthorRoutes = async (fastify: FastifyInstance): Promise<vo
         response: authorRouteResponses
       }
     },
-    createAuthor
+    createAuthor as RouteHandlerMethod
   );
 
   fastify.patch(
     '/:id',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Authors'],
         summary: 'Atualiza autor',
@@ -63,12 +66,13 @@ export const registerAuthorRoutes = async (fastify: FastifyInstance): Promise<vo
         response: authorRouteResponses
       }
     },
-    updateAuthor
+    updateAuthor as RouteHandlerMethod
   );
 
   fastify.delete(
     '/:id',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Authors'],
         summary: 'Remove autor',
@@ -77,6 +81,6 @@ export const registerAuthorRoutes = async (fastify: FastifyInstance): Promise<vo
         response: { 204: { type: 'null' }, 404: errorResponseSchema, 409: errorResponseSchema }
       }
     },
-    deleteAuthor
+    deleteAuthor as RouteHandlerMethod
   );
 };

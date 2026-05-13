@@ -10,7 +10,22 @@ import { registerArticleSourceRoutes } from './modules/article-sources/article-s
 
 export const buildApp = async (): Promise<FastifyInstance> => {
   const fastify = Fastify({
-    logger: true
+    logger: {
+      redact: [
+        'req.headers.authorization',
+        'req.headers.cookie',
+        'req.headers["x-api-key"]',
+        'req.body.password',
+        'req.body.token',
+        'req.body.secret',
+        '*.password',
+        '*.token',
+        '*.secret',
+        '*.apiKey',
+        '*.databaseUrl',
+        '*.connectionString'
+      ]
+    }
   });
 
   await fastify.register(sensible);

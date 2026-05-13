@@ -1,4 +1,5 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, RouteHandlerMethod } from 'fastify';
+import { requireAdminApiKey } from '../../plugins/admin-auth';
 import {
   categoryIdOrSlugParamsSchema,
   categoryIdParamsSchema,
@@ -41,6 +42,7 @@ export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<
   fastify.post(
     '/',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Categories'],
         summary: 'Cria categoria',
@@ -49,12 +51,13 @@ export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<
         response: categoryRouteResponses
       }
     },
-    createCategory
+    createCategory as RouteHandlerMethod
   );
 
   fastify.patch(
     '/:id',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Categories'],
         summary: 'Atualiza categoria',
@@ -64,12 +67,13 @@ export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<
         response: categoryRouteResponses
       }
     },
-    updateCategory
+    updateCategory as RouteHandlerMethod
   );
 
   fastify.delete(
     '/:id',
     {
+      preHandler: requireAdminApiKey,
       schema: {
         tags: ['Categories'],
         summary: 'Remove categoria',
@@ -78,6 +82,6 @@ export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<
         response: { 204: { type: 'null' }, 404: errorResponseSchema, 409: errorResponseSchema }
       }
     },
-    deleteCategory
+    deleteCategory as RouteHandlerMethod
   );
 };

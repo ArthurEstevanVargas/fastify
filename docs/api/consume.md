@@ -28,6 +28,16 @@ NEXT_PUBLIC_API_BASE_URL=https://fastify-production-62e2.up.railway.app/api/v1
 REACT_APP_API_BASE_URL=https://fastify-production-62e2.up.railway.app/api/v1
 ```
 
+Para rotas administrativas (`POST`, `PATCH` e `DELETE`), a API exige
+`ADMIN_API_KEY` configurada no backend. Essa chave deve existir no ambiente da
+API no Railway e ter pelo menos 32 caracteres.
+
+Se o frontend rodar no browser, variáveis como `VITE_ADMIN_API_KEY`,
+`NEXT_PUBLIC_ADMIN_API_KEY` e `REACT_APP_ADMIN_API_KEY` ficam visíveis no bundle
+entregue ao usuário. Use isso apenas em painel interno temporário e não em
+frontend público. O padrão mais seguro é manter a chave somente em código
+server-side, como uma API route do Next.js, BFF ou backend admin.
+
 No frontend, normalize a URL para evitar barras duplicadas:
 
 ```ts
@@ -126,14 +136,16 @@ export type ApiErrorBody = {
 export type ApiRequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;
   auth?: boolean;
+  admin?: boolean;
 };
 ```
 
 ### Token de Autenticação
 
-A documentação atual da API informa que as rotas existentes não exigem
-autenticação. Caso a API passe a usar JWT, use Bearer Token no header
-`Authorization`.
+As rotas públicas de leitura não exigem autenticação. Rotas administrativas de
+escrita exigem `ADMIN_API_KEY`, conforme a seção "Rotas Administrativas com
+ADMIN_API_KEY". Caso a API passe a usar JWT para usuários, use Bearer Token no
+header `Authorization`.
 
 Para SPAs, uma implementação comum é guardar o access token em memória ou em
 `localStorage`. `localStorage` é simples, mas aumenta a exposição em caso de XSS.
@@ -163,6 +175,7 @@ import { clearAccessToken, getAccessToken } from './authToken';
 import type { ApiErrorBody, ApiRequestOptions } from '../../types/api';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
+const adminApiKey = import.meta.env.VITE_ADMIN_API_KEY;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -218,6 +231,14 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  if (options.admin) {
+    if (!adminApiKey) {
+      throw new Error('VITE_ADMIN_API_KEY não configurada');
+    }
+
+    headers.set('x-api-key', adminApiKey);
+  }
+
   const response = await fetch(`${apiBaseUrl}${path}`, {
     ...options,
     headers,
@@ -257,6 +278,7 @@ Headers padrão:
 Accept: application/json
 Content-Type: application/json
 Authorization: Bearer <token>
+x-api-key: <admin-api-key>
 ```
 
 Regras:
@@ -264,8 +286,74 @@ Regras:
 - Envie `Accept: application/json` em todas as chamadas.
 - Envie `Content-Type: application/json` apenas quando houver body JSON.
 - Envie `Authorization` somente quando a rota exigir autenticação.
+- Envie `x-api-key` somente para rotas administrativas mutáveis (`POST`, `PATCH`, `DELETE`) quando estiver usando o mecanismo temporário de `ADMIN_API_KEY`.
 - Não monte headers manualmente em componentes; centralize no cliente HTTP.
 - Para upload de arquivo com `FormData`, não defina `Content-Type` manualmente.
+
+## Rotas Administrativas com ADMIN_API_KEY
+
+No estado atual da API, leituras públicas continuam sem chave:
+
+- `GET /categories`
+- `GET /authors`
+- `GET /articles`
+- `GET /article-sources`
+
+As rotas de escrita exigem a chave administrativa:
+
+- `POST`, `PATCH` e `DELETE` em `/categories`
+- `POST`, `PATCH` e `DELETE` em `/authors`
+- `POST`, `PATCH` e `DELETE` em `/articles`
+- `POST`, `PATCH` e `DELETE` em `/article-sources`
+
+Envie a chave por um destes headers:
+
+```text
+x-api-key: <admin-api-key>
+```
+
+ou:
+
+```text
+Authorization: Bearer <admin-api-key>
+```
+
+Use `x-api-key` no cliente HTTP para não confundir essa chave administrativa com
+um futuro JWT de usuário.
+
+Exemplo direto:
+
+```ts
+await apiRequest<Category>('/categories', {
+  method: 'POST',
+  admin: true,
+  body: {
+    name: 'Saúde Menstrual',
+    slug: 'saude-menstrual',
+    description: 'Conteúdos sobre ciclo menstrual.'
+  }
+});
+```
+
+Respostas esperadas:
+
+- `401 UNAUTHORIZED`: chave ausente ou incorreta.
+- `503 ADMIN_API_KEY_NOT_CONFIGURED`: `ADMIN_API_KEY` não foi configurada na API.
+
+Para produção, prefira um fluxo server-side:
+
+```ts
+// Exemplo em código server-side. Não use NEXT_PUBLIC_ para a chave admin.
+const response = await fetch(`${process.env.API_BASE_URL}/categories`, {
+  method: 'POST',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'x-api-key': process.env.ADMIN_API_KEY ?? ''
+  },
+  body: JSON.stringify(payload)
+});
+```
 
 ## Services por Domínio
 
@@ -316,6 +404,7 @@ export const categoryService = {
   create(payload: CreateCategoryRequest): Promise<Category> {
     return apiRequest<Category>('/categories', {
       method: 'POST',
+      admin: true,
       body: payload
     });
   },
@@ -323,13 +412,15 @@ export const categoryService = {
   update(id: string, payload: UpdateCategoryRequest): Promise<Category> {
     return apiRequest<Category>(`/categories/${id}`, {
       method: 'PATCH',
+      admin: true,
       body: payload
     });
   },
 
   remove(id: string): Promise<void> {
     return apiRequest<void>(`/categories/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      admin: true
     });
   }
 };
@@ -421,6 +512,7 @@ export const transactionService = {
   create(payload: CreateTransactionRequest): Promise<Transaction> {
     return apiRequest<Transaction>('/transactions', {
       method: 'POST',
+      admin: true,
       body: payload
     });
   },
@@ -428,13 +520,15 @@ export const transactionService = {
   update(id: string, payload: UpdateTransactionRequest): Promise<Transaction> {
     return apiRequest<Transaction>(`/transactions/${id}`, {
       method: 'PATCH',
+      admin: true,
       body: payload
     });
   },
 
   remove(id: string): Promise<void> {
     return apiRequest<void>(`/transactions/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      admin: true
     });
   }
 };
@@ -480,6 +574,7 @@ const response = await apiRequest<ApiListResponse<Category>>('/categories');
 ```ts
 const category = await apiRequest<Category>('/categories', {
   method: 'POST',
+  admin: true,
   body: {
     name: 'Saúde Menstrual',
     slug: 'saude-menstrual',
@@ -496,6 +591,7 @@ Use `PUT` apenas quando a API exigir substituição completa do recurso.
 ```ts
 const category = await apiRequest<Category>('/categories/category-id', {
   method: 'PATCH',
+  admin: true,
   body: {
     description: 'Nova descrição.'
   }
@@ -506,7 +602,8 @@ const category = await apiRequest<Category>('/categories/category-id', {
 
 ```ts
 await apiRequest<void>('/categories/category-id', {
-  method: 'DELETE'
+  method: 'DELETE',
+  admin: true
 });
 ```
 
@@ -585,6 +682,8 @@ export function getUserFacingErrorMessage(error: unknown): string {
       return 'Alguns campos precisam ser corrigidos antes de continuar.';
     case 500:
       return 'Ocorreu um erro interno. Tente novamente em instantes.';
+    case 503:
+      return 'Serviço temporariamente indisponível. Tente novamente em instantes.';
     default:
       return error.message || 'Não foi possível completar a solicitação.';
   }
@@ -602,6 +701,7 @@ Tratamento recomendado por status:
 | 409 | Conflito | Informar conflito, como slug/e-mail já existente ou recurso em uso. |
 | 422 | Erro semântico de validação | Mapear erros por campo quando a API fornecer detalhes. |
 | 500 | Erro interno | Exibir mensagem genérica e permitir retry quando fizer sentido. |
+| 503 | Serviço indisponível | Verificar configuração da API, como `ADMIN_API_KEY` ou `DATABASE_URL`, e permitir retry quando fizer sentido. |
 
 Sempre que existir `code`, prefira regras por `code` para casos específicos:
 
@@ -614,6 +714,10 @@ function getSpecificErrorMessage(error: ApiError): string {
       return 'Categoria não encontrada.';
     case 'VALIDATION_ERROR':
       return 'Os dados enviados são inválidos.';
+    case 'ADMIN_API_KEY_NOT_CONFIGURED':
+      return 'A chave administrativa não está configurada na API.';
+    case 'UNAUTHORIZED':
+      return 'Você não está autenticado para executar esta ação.';
     default:
       return getUserFacingErrorMessage(error);
   }
@@ -836,6 +940,8 @@ Retry:
 
 - Ofereça retry para falhas transitórias, como rede ou `500`.
 - Não faça retry automático para `400`, `401`, `403`, `404`, `409` ou `422`.
+- Para `503`, permita retry quando for falha transitória; se o `code` for
+  `ADMIN_API_KEY_NOT_CONFIGURED`, corrija a variável de ambiente na API.
 - Use backoff em retries automáticos para evitar sobrecarga.
 
 Refresh token:
@@ -868,6 +974,8 @@ Validação:
 - [ ] A URL base está configurada por variável de ambiente.
 - [ ] Nenhum componente monta URL absoluta da API diretamente.
 - [ ] O cliente HTTP centraliza `Accept`, `Content-Type` e `Authorization`.
+- [ ] Chamadas `POST`, `PATCH` e `DELETE` para rotas administrativas usam `admin: true` ou adicionam `x-api-key` centralmente.
+- [ ] `ADMIN_API_KEY` não é exposta em frontend público; quando necessário, ela fica em código server-side.
 - [ ] O token, se usado, é salvo, recuperado e limpo por funções centralizadas.
 - [ ] `401` limpa a sessão e aciona login ou refresh token.
 - [ ] Services estão separados por domínio e não possuem estado visual.

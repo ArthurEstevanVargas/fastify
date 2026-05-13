@@ -44,7 +44,9 @@ export const paginationQuerySchema = {
 
 export const commonErrorResponses = {
   400: errorResponseSchema,
+  401: errorResponseSchema,
   404: errorResponseSchema,
   409: errorResponseSchema,
+  503: errorResponseSchema,
   500: errorResponseSchema
 } as const;

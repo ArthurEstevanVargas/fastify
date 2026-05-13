@@ -5,6 +5,7 @@ config();
 export type NodeEnv = 'development' | 'test' | 'production';
 
 export type Env = {
+  adminApiKey: string | undefined;
   databaseUrl: string | undefined;
   nodeEnv: NodeEnv;
   port: number;
@@ -30,9 +31,24 @@ const parsePort = (value: string | undefined): number => {
 
 export const loadEnv = (): Env => {
   const nodeEnv = isNodeEnv(process.env.NODE_ENV) ? process.env.NODE_ENV : 'development';
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (adminApiKey && adminApiKey.length < 32) {
+    throw new Error('ADMIN_API_KEY must be at least 32 characters');
+  }
+
+  if (nodeEnv === 'production' && !adminApiKey) {
+    throw new Error('ADMIN_API_KEY is required in production');
+  }
+
+  if (nodeEnv === 'production' && !databaseUrl) {
+    throw new Error('DATABASE_URL is required in production');
+  }
 
   return {
-    databaseUrl: process.env.DATABASE_URL,
+    adminApiKey,
+    databaseUrl,
     nodeEnv,
     port: parsePort(process.env.PORT)
   };

@@ -6,7 +6,7 @@ O objetivo desta API é servir como backend do MVP, centralizando a curadoria e 
 
 ## O que é o projeto
 
-Este repositório contém uma aplicação backend em **Node.js**, **TypeScript**, **Fastify** e **PostgreSQL**. A API expõe endpoints para:
+Este repositório contém a API backend de uma plataforma de conteúdo, desenvolvida com Node.js, TypeScript, Fastify e PostgreSQL.
 
 - listar categorias temáticas;
 - listar, buscar e destacar artigos publicados;

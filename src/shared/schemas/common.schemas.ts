@@ -50,3 +50,5 @@ export const commonErrorResponses = {
   503: errorResponseSchema,
   500: errorResponseSchema
 } as const;
+
+export const adminRouteSecurity = [{ AdminApiKey: [] }, { AdminBearerAuth: [] }] as const;

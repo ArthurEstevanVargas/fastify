@@ -1,5 +1,5 @@
 import type { FastifyInstance, RouteHandlerMethod } from 'fastify';
-import { errorResponseSchema } from '../../shared/schemas/common.schemas';
+import { adminRouteSecurity, errorResponseSchema } from '../../shared/schemas/common.schemas';
 import { requireAdminApiKey } from '../../plugins/admin-auth';
 import {
   createArticle,
@@ -86,6 +86,7 @@ export const registerArticleRoutes = async (fastify: FastifyInstance): Promise<v
         tags: ['Articles'],
         summary: 'Cria artigo',
         description: 'Cria um artigo. Artigos publicados exigem publishedAt.',
+        security: adminRouteSecurity,
         body: createArticleBodySchema,
         response: articleRouteResponses
       }
@@ -101,6 +102,7 @@ export const registerArticleRoutes = async (fastify: FastifyInstance): Promise<v
         tags: ['Articles'],
         summary: 'Atualiza artigo',
         description: 'Atualiza parcialmente um artigo existente.',
+        security: adminRouteSecurity,
         params: articleIdParamsSchema,
         body: updateArticleBodySchema,
         response: articleRouteResponses
@@ -117,6 +119,7 @@ export const registerArticleRoutes = async (fastify: FastifyInstance): Promise<v
         tags: ['Articles'],
         summary: 'Remove artigo',
         description: 'Remove logicamente um artigo.',
+        security: adminRouteSecurity,
         params: articleIdParamsSchema,
         response: { 204: { type: 'null' }, 404: errorResponseSchema }
       }

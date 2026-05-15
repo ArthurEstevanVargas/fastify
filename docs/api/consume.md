@@ -53,18 +53,29 @@ Se o projeto usar Next.js, substitua `import.meta.env.VITE_API_BASE_URL` por
 
 ## Swagger/OpenAPI
 
-No estado atual do repositório, não foi localizada configuração Swagger/OpenAPI
-ativa. O arquivo [README da API](./README.md) registra que não há pacotes
-`@fastify/swagger` ou `@fastify/swagger-ui` configurados no projeto.
+O backend expoe Swagger/OpenAPI automaticamente a partir dos schemas Fastify das
+rotas:
 
-Enquanto uma documentação OpenAPI pública não existir, use como referência:
+```text
+GET /docs
+GET /docs/json
+GET /docs/yaml
+```
+
+Em desenvolvimento local:
+
+```text
+http://localhost:3000/docs
+http://localhost:3000/docs/json
+```
+
+Use o documento OpenAPI como fonte principal para paths, payloads, parametros,
+status codes e schemas. A documentacao complementar continua util para exemplos
+e decisoes de consumo:
 
 - [Rotas da API](./routes.md)
 - [Exemplos de consumo](./examples.md)
 - [Erros da API](./errors.md)
-
-Se Swagger/OpenAPI for publicado futuramente, ele deve ser a fonte de verdade
-para paths, payloads, parâmetros, status codes e schemas.
 
 ## Organização Recomendada
 

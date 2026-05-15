@@ -7,7 +7,7 @@ API REST em Fastify para conteudos da plataforma Minha Saude Feminina. A API exp
 - Formato de entrada e saida: JSON.
 - Prefixo principal das rotas de negocio: `/api/v1`.
 - Rotas de leitura de artigos retornam apenas artigos publicados e nao removidos logicamente.
-- Rotas de escrita existem para curadoria e integracoes internas, mas ainda nao possuem autenticacao implementada.
+- Rotas de escrita existem para curadoria e integracoes internas e exigem `ADMIN_API_KEY`.
 - Erros tratados seguem o formato `{ "error": true, "message": "...", "code": "..." }`.
 
 ## URLs
@@ -61,19 +61,24 @@ curl http://localhost:3000/health
 
 ## Swagger/OpenAPI
 
-Nao foi localizada configuracao Swagger/OpenAPI ativa no projeto atual. A API possui schemas Fastify nas rotas, e esses schemas foram complementados com descricoes e exemplos para ficarem prontos para uma futura integracao com Swagger.
-
-Quando o Swagger UI for registrado no app, recomenda-se expor a documentacao em uma rota como:
+O projeto registra `@fastify/swagger` e `@fastify/swagger-ui`. A documentacao e gerada a partir dos schemas Fastify definidos nas rotas.
 
 ```text
 http://localhost:3000/docs
+http://localhost:3000/docs/json
+http://localhost:3000/docs/yaml
 ```
 
 ## Autenticacao
 
-Nao ha autenticacao implementada nas rotas atuais. Nenhum endpoint exige header `Authorization`.
+Rotas publicas de leitura nao exigem autenticacao. Endpoints mutaveis (`POST`, `PATCH`, `DELETE`) exigem a chave configurada em `ADMIN_API_KEY`.
 
-Observacao de seguranca: endpoints mutaveis (`POST`, `PATCH`, `DELETE`) nao devem ser expostos publicamente sem uma camada de autenticacao e autorizacao para curadoria/admin.
+Envie a chave por um destes formatos:
+
+```text
+x-api-key: <admin-api-key>
+Authorization: Bearer <admin-api-key>
+```
 
 ## Formato das Respostas
 
@@ -128,6 +133,5 @@ Para curadoria interna:
 
 ## Divergencias Encontradas
 
-- A solicitacao informa que Swagger/OpenAPI ja esta configurado, mas nao foram encontrados pacotes `@fastify/swagger` ou `@fastify/swagger-ui`, nem registro desses plugins em `src/app.ts`.
 - A query `status` existe no schema de `GET /api/v1/articles`, mas a implementacao de listagem publica filtra sempre `status = 'published'`. Na pratica, valores diferentes de `published` nao alteram o retorno.
 - O schema de resposta de `GET /api/v1/articles/featured` aceita os mesmos filtros de `GET /api/v1/articles`; a implementacao sempre forca `featured=true`.

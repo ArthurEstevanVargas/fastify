@@ -101,6 +101,14 @@ A API ficará disponível em:
 http://localhost:3000
 ```
 
+Documentacao Swagger/OpenAPI:
+
+```text
+http://localhost:3000/docs
+http://localhost:3000/docs/json
+http://localhost:3000/docs/yaml
+```
+
 Verifique a saúde da aplicação:
 
 ```bash

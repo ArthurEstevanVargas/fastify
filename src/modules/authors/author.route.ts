@@ -1,5 +1,5 @@
 import type { FastifyInstance, RouteHandlerMethod } from 'fastify';
-import { errorResponseSchema } from '../../shared/schemas/common.schemas';
+import { adminRouteSecurity, errorResponseSchema } from '../../shared/schemas/common.schemas';
 import { requireAdminApiKey } from '../../plugins/admin-auth';
 import { createAuthor, deleteAuthor, getAuthor, listAuthors, updateAuthor } from './author.controller';
 import {
@@ -46,6 +46,7 @@ export const registerAuthorRoutes = async (fastify: FastifyInstance): Promise<vo
         tags: ['Authors'],
         summary: 'Cria autor',
         description: 'Cria um autor ou especialista.',
+        security: adminRouteSecurity,
         body: createAuthorBodySchema,
         response: authorRouteResponses
       }
@@ -61,6 +62,7 @@ export const registerAuthorRoutes = async (fastify: FastifyInstance): Promise<vo
         tags: ['Authors'],
         summary: 'Atualiza autor',
         description: 'Atualiza parcialmente um autor existente.',
+        security: adminRouteSecurity,
         params: authorIdParamsSchema,
         body: updateAuthorBodySchema,
         response: authorRouteResponses
@@ -77,6 +79,7 @@ export const registerAuthorRoutes = async (fastify: FastifyInstance): Promise<vo
         tags: ['Authors'],
         summary: 'Remove autor',
         description: 'Remove logicamente um autor. Autores com artigos ativos nao podem ser removidos.',
+        security: adminRouteSecurity,
         params: authorIdParamsSchema,
         response: { 204: { type: 'null' }, 404: errorResponseSchema, 409: errorResponseSchema }
       }

@@ -1,5 +1,5 @@
 import type { FastifyInstance, RouteHandlerMethod } from 'fastify';
-import { errorResponseSchema } from '../../shared/schemas/common.schemas';
+import { adminRouteSecurity, errorResponseSchema } from '../../shared/schemas/common.schemas';
 import { requireAdminApiKey } from '../../plugins/admin-auth';
 import {
   createArticleSource,
@@ -54,6 +54,7 @@ export const registerArticleSourceRoutes = async (fastify: FastifyInstance): Pro
         tags: ['Article Sources'],
         summary: 'Cria fonte',
         description: 'Cria uma fonte vinculada a um artigo existente.',
+        security: adminRouteSecurity,
         body: createArticleSourceBodySchema,
         response: articleSourceRouteResponses
       }
@@ -69,6 +70,7 @@ export const registerArticleSourceRoutes = async (fastify: FastifyInstance): Pro
         tags: ['Article Sources'],
         summary: 'Atualiza fonte',
         description: 'Atualiza parcialmente uma fonte de artigo.',
+        security: adminRouteSecurity,
         params: articleSourceIdParamsSchema,
         body: updateArticleSourceBodySchema,
         response: articleSourceRouteResponses
@@ -85,6 +87,7 @@ export const registerArticleSourceRoutes = async (fastify: FastifyInstance): Pro
         tags: ['Article Sources'],
         summary: 'Remove fonte',
         description: 'Remove logicamente uma fonte de artigo.',
+        security: adminRouteSecurity,
         params: articleSourceIdParamsSchema,
         response: { 204: { type: 'null' }, 404: errorResponseSchema }
       }

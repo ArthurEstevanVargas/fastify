@@ -9,7 +9,7 @@ import {
   updateCategoryBodySchema
 } from './category.schema';
 import { createCategory, deleteCategory, getCategory, listCategories, updateCategory } from './category.controller';
-import { errorResponseSchema } from '../../shared/schemas/common.schemas';
+import { adminRouteSecurity, errorResponseSchema } from '../../shared/schemas/common.schemas';
 
 export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<void> => {
   fastify.get(
@@ -47,6 +47,7 @@ export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<
         tags: ['Categories'],
         summary: 'Cria categoria',
         description: 'Cria uma categoria editorial. Slugs devem ser unicos.',
+        security: adminRouteSecurity,
         body: createCategoryBodySchema,
         response: categoryRouteResponses
       }
@@ -62,6 +63,7 @@ export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<
         tags: ['Categories'],
         summary: 'Atualiza categoria',
         description: 'Atualiza parcialmente uma categoria existente.',
+        security: adminRouteSecurity,
         params: categoryIdParamsSchema,
         body: updateCategoryBodySchema,
         response: categoryRouteResponses
@@ -78,6 +80,7 @@ export const registerCategoryRoutes = async (fastify: FastifyInstance): Promise<
         tags: ['Categories'],
         summary: 'Remove categoria',
         description: 'Remove logicamente uma categoria. Categorias com artigos ativos nao podem ser removidas.',
+        security: adminRouteSecurity,
         params: categoryIdParamsSchema,
         response: { 204: { type: 'null' }, 404: errorResponseSchema, 409: errorResponseSchema }
       }

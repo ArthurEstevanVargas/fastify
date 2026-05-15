@@ -4,6 +4,7 @@ import { loadEnv } from './config/env';
 import sensible from './plugins/sensible';
 import database from './plugins/database';
 import errorHandler from './plugins/error-handler';
+import { registerSwagger } from './plugins/swagger';
 import { registerHealthRoute } from './modules/health.route';
 import { registerCategoryRoutes } from './modules/categories/category.route';
 import { registerAuthorRoutes } from './modules/authors/author.route';
@@ -54,6 +55,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await fastify.register(sensible);
   await fastify.register(database);
   await fastify.register(errorHandler);
+  await fastify.register(registerSwagger);
 
   await fastify.register(registerHealthRoute);
   await fastify.register(registerCategoryRoutes, { prefix: '/api/v1/categories' });
